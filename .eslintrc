@@ -1,0 +1,25 @@
+{
+	"root": true,
+	"parser": "@typescript-eslint/parser",
+	"plugins": ["@typescript-eslint", "prettier"],
+	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+	"rules": {
+		"no-empty-function": "off",
+		"@typescript-eslint/ban-types": "off",
+		"@typescript-eslint/no-explicit-any": "off",
+		"@typescript-eslint/no-unused-vars": ["off"],
+		"@typescript-eslint/explicit-function-return-type": ["warn"],
+		"prettier/prettier": [
+			"error",
+			{
+				"singleQuote": true,
+				"trailingComma": "all",
+				"useTabs": true,
+				"semi": true,
+				"bracketSameLine": true,
+				"printWidth": 100,
+				"endOfLine": "auto"
+			}
+		]
+	}
+}
