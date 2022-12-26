@@ -2,13 +2,17 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class ConfigService {
-	private _salt: string;
+	private _salt: number;
 
 	constructor() {
-		process.env.SALT ? (this._salt = process.env.SALT) : (this._salt = '10');
+		process.env.SALT ? (this._salt = Number(process.env.SALT)) : (this._salt = 10);
 	}
 
-	get salt(): string {
+	get salt(): number {
 		return this._salt;
+	}
+
+	get(name: string): string | undefined {
+		return process.env[name];
 	}
 }
