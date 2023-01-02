@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, response, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { BaseController } from '../common/base.controller';
 import { ILogger } from '../logger/logger.interface';
@@ -10,12 +10,15 @@ import { UserRegisterDto } from './dto/user-register.dto';
 import { IUserService } from './users.service.interface';
 import { HTTPError } from '../errors/http-error.class';
 import { validateMiddleware } from '../common/validate.middleware';
+import { sign } from 'jsonwebtoken';
+import { ConfigService } from '../config/config.service';
 
 @injectable()
 export class UserController extends BaseController implements IUserController {
 	constructor(
 		@inject(TYPES.ILogger) private loggerService: ILogger,
 		@inject(TYPES.UserService) private userService: IUserService,
+		@inject(TYPES.ConfigService) private configService: ConfigService,
 	) {
 		super(loggerService);
 		this.bindRoutes([
@@ -31,6 +34,12 @@ export class UserController extends BaseController implements IUserController {
 				func: this.login,
 				middlewares: [new validateMiddleware(UserLoginDto)],
 			},
+			{
+				path: '/info',
+				method: 'get',
+				func: this.info,
+				middlewares: [],
+			},
 		]);
 	}
 
@@ -43,7 +52,8 @@ export class UserController extends BaseController implements IUserController {
 		if (!result) {
 			return next(new HTTPError(401, 'Ошибка авторизации', 'login'));
 		}
-		this.ok(res, {});
+		const jwt = await this.signJWT(req.body.email, this.configService.get('SECRET'));
+		this.ok(res, { jwt });
 	}
 
 	async register(
@@ -55,6 +65,31 @@ export class UserController extends BaseController implements IUserController {
 		if (!result) {
 			return next(new HTTPError(422, 'Такой пользователь уже существует'));
 		}
-		this.ok(res, { email: result.email, id: result.id });
+		const jwt = await this.signJWT(body.email, this.configService.get('SECRET'));
+		this.ok(res, { email: result.email, id: result.id, jwt });
+	}
+
+	async info(
+		{ user }: Request<{}, {}, UserRegisterDto>,
+		res: Response,
+		next: NextFunction,
+	): Promise<void> {
+		this.ok(res, { email: user });
+	}
+
+	private signJWT(email: string, secret: string): Promise<string> {
+		return new Promise<string>((resolve, reject) => {
+			sign(
+				{ email, iat: Math.floor(Date.now() / 1000) },
+				secret,
+				{ algorithm: 'HS256', expiresIn: Number(this.configService.get('EXPIRESIN')) },
+				(err, token) => {
+					if (err) {
+						reject(err);
+					}
+					resolve(token as string);
+				},
+			);
+		});
 	}
 }
