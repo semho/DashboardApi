@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
 import { ILogger } from '../logger/logger.interface';
 import { TYPES } from '../types';
+import { IConfigService } from './config.service.interface';
 
 @injectable()
-export class ConfigService {
+export class ConfigService implements IConfigService {
 	private _salt: number;
 
 	constructor(@inject(TYPES.ILogger) private logger: ILogger) {
