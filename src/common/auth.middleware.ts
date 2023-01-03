@@ -20,7 +20,6 @@ export class AuthMiddleware implements IMiddleware {
 				(req as CustomRequest).user = (decoded as CustomPayload).email;
 				next();
 			} catch (err) {
-				console.log(err);
 				next();
 			}
 		} else {
